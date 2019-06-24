@@ -1,0 +1,8 @@
+{
+	"myname": "@testbot",
+    "myemail": "testbotemail@gmail.com",
+	"unhashedpass": "testbotpasswordhere",
+	"loginserver": "https://direct.anondraw.com:4552",
+	"privatechatserver": "https://direct.anondraw.com:4552",
+	"myuserid": "12345"
+}

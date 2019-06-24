@@ -1,0 +1,8 @@
+{
+  "lockfileVersion": 1,
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "socket.io-client": "^2.2.0",
+    "xmlhttprequest": "^1.8.0"
+  }
+}
