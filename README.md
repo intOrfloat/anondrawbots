@@ -11,6 +11,9 @@ setup:
 5. type 'node nameofbot.js' to launch the bot
 
 if using pm2:
+
 6. (optional) 'pm2 start nameofbot.js' start your bot and give it to pm2
+
 7. (optional) 'pm2 list' shows all your bots
+
 8. (optional) 'pm2 logs 1' view logs of your bot ( list shows the id ex: 1, 2, 3... )
