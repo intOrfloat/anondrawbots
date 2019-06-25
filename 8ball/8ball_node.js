@@ -41,7 +41,7 @@ var firstTimeBinding = true;
 var suppressReputation = true;
 function startClient(){
 
-	socket.emit("changename", "@8ball 🎱 8b% 8b? 8b!", function(e){
+	socket.emit("changename", myname, function(e){
 		console.log(e)
 
 		 loginNoHash(myemail, passwordHash, function(e){
@@ -97,8 +97,14 @@ function chatmessagecallback(data){
 			sendNetworkMessage("Don't count on it.")
 			return;
 		}
+if(data.message == "8b?") {
+	sendNetworkMessage("To build a question with custom results send 8b? followed by your question ending by a question mark then write the possible answers divided by commas or 'or' e.g. 8b? Is this correct? Sure, Maybe or Never?");
+	//makeMessage("me", data.user, data.message)
+	console.log("me", data.user, data.message)
+return
+}
 
-if(data.message.includes("@8ball?") || data.message.includes("@8b?") || data.message.includes("8ball?") || data.message.includes("8b?")) {
+else if(data.message.includes("@8ball?") || data.message.includes("@8b?") || data.message.includes("8ball?") || data.message.includes("8b?")) {
 
 var index = userTimeoutsNames.indexOf(data.user)
 			if(index != -1)
@@ -132,6 +138,8 @@ userTimeouts.push(Date.now());
 	var cleaningmsg = cleaningmsg.replace("8ball? ", "");
 	var cleaningmsg = cleaningmsg.replace("8ball?", "");
 
+var questionbackup = cleaningmsg; // for simple questions like 'obama, clinton or trump?' instead of 'what president is better? obama, clinton or trump?'
+
 	var cleaningmsg = cleaningmsg.replace(/(.*?)\?/, ""); //removes the question
 	var cleaningmsg = cleaningmsg.replace(/\?/g, ""); //removes extra questionmarks
 	var cleaningmsg = cleaningmsg.replace(" or ", " , ");
@@ -139,6 +147,26 @@ userTimeouts.push(Date.now());
 	var cleaningmsg = cleaningmsg.replace(" , ", ",");
 	var cleaningmsg = cleaningmsg.replace(", ", ",");
 	var cleaningmsg = cleaningmsg.replace(" ,", ",");
+
+if (cleaningmsg.length < 2) {
+
+var  questionbackup =  questionbackup.replace(/\?/g, ""); //removes extra questionmarks
+var  questionbackup =  questionbackup.replace(" or ", " , ");
+
+var  questionbackup =  questionbackup.replace(" , ", ",");
+var  questionbackup =  questionbackup.replace(", ", ",");
+var  questionbackup =  questionbackup.replace(" ,", ",");
+
+
+if(questionbackup.indexOf(",")== -1) {
+	sendNetworkMessage("To build a question with custom results send 8b? followed by your question ending by a question mark then write the possible answers divided by commas or 'or' e.g. 8b? Is this correct? Sure, Maybe or Never?");
+	//makeMessage("me", data.user, data.message)
+	console.log("me", data.user, data.message)
+return
+}
+
+var theoptions = questionbackup.split(',');
+} else {
 
 
 if(cleaningmsg.indexOf(",")== -1) {
@@ -148,8 +176,8 @@ if(cleaningmsg.indexOf(",")== -1) {
 return
 }
 
-
 	var theoptions = cleaningmsg.split(',');
+}
 
 	var randomIndex = Math.floor(Math.random() * theoptions.length);
 	var randomElement = theoptions[randomIndex];
