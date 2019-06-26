@@ -48,6 +48,7 @@ const config = require('./config.json');
 var userTimeoutsNames = []
 var userTimeouts = []
 var secondsBeforeAskAgain = 25;
+var blacklistUserids = config.blacklist || []
 var myname = config.myname
 var myemail = config.myemail
 var unhashedPass = config.unhashedpass
@@ -1212,6 +1213,7 @@ function chatmessagecallback(data){
 			sendNetworkMessage(sentence)
 		}
 		else if(data.message.includes("takebreak") || data.message.includes("tb")){
+      if(blacklistUserids.includes(data.userid)) return;
 			playerListDict[data.id]["takebreakTimestamp"] = Date.now();
 			sendNetworkMessage("You are now on a 15 minute drawing streak break. Just draw to kick off your streak again. You will be given a 2 minute warning.")
 		}
