@@ -249,7 +249,9 @@ function chatmessagecallback(data){
     var cleaningmsg = cleaningmsg.replace("@xxxdw+", "");
     var cleaningmsg = cleaningmsg.replace("xxx+ ", "");
     var cleaningmsg = cleaningmsg.replace("xxx+", "");
-    var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,"");
+	var cleaningmsg = cleaningmsg.replace("dw+ ", "");
+	var cleaningmsg = cleaningmsg.replace("dw+", "");	
+    var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,""); //remove 'the' 'a' and 'an' from the start to avoid duplicates
     var playerobj = backupPlayerList.find(x => x.userid === data.userid);
 		if (playerobj.reputation<10) {
 		    sendNetworkMessage("sorry but you need at least 10rep to add values! 💡");
