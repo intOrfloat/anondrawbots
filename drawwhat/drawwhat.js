@@ -146,20 +146,12 @@ function chatmessagecallback(data){
   }
 	
 	else if (data.message == "oldd?" || data.message == "@oldd?") {
-        currenttime = Date.now();
-            if (currenttime - lastestmsgtime < milisecondsBeforeAskAgain) {            
-            setTimeout(WaitWorld , 1000);
-                return
-        }
-
 var dailydb = getOldDailyDare();
     if(dailydb){
       sendNetworkMessage(dailydb.daretitle + " " + dailydb.coords + " 🦊");
     }else{
       sendNetworkMessage("No daily dare on record")
-    }
-
-            lastestmsgtime = Date.now();
+    }            
                 }	
 	
   else if (data.message == "@dailydare" || data.message == "dd?" || data.message == "@dd?") {
