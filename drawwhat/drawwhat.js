@@ -238,19 +238,15 @@ function chatmessagecallback(data){
     }
   }
 	else if ( ( /@xxxdw\+|@xxx\+|xxx\+/.test(data.message) || /@drawwhat\+|@dw\+|dw\+/.test(data.message) ) && data.user != myname && data.user != "SERVER") {
-    var cleaningmsg = data.message.replace(/ +(?= )/g,''); //remove multiple spaces
-    //var cleaningmsg = cleaningmsg.replace(/,/g, ""); //remove commas
-    //var cleaningmsg = cleaningmsg.replace(/\?/g, "");
-    //var cleaningmsg = cleaningmsg.replace(/\!/g, "");
-    //var cleaningmsg = cleaningmsg.replace(/\./g, "");
-    var cleaningmsg = cleaningmsg.replace(/\s+$/, ''); //remove spaces in the end
-    var cleaningmsg = cleaningmsg.replace(/['"]+/g, "'");	//remove quotation marks using ' instead
-    var cleaningmsg = cleaningmsg.replace("@xxxdw+ ", "");
-    var cleaningmsg = cleaningmsg.replace("@xxxdw+", "");
-    var cleaningmsg = cleaningmsg.replace("xxx+ ", "");
-    var cleaningmsg = cleaningmsg.replace("xxx+", "");
-    var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,"");
-    var playerobj = backupPlayerList.find(x => x.userid === data.userid);
+var cleaningmsg = data.message.replace(/ +(?= )/g,''); //remove multiple spaces
+var cleaningmsg = cleaningmsg.replace(/\s+$/, ''); //remove spaces in the end
+var cleaningmsg = cleaningmsg.replace(/['"]+/g, "'");	//remove quotation marks using ' instead
+var cleaningmsg = cleaningmsg.replace("xxx+ ", "");
+var cleaningmsg = cleaningmsg.replace("xxx+", "");	
+	var cleaningmsg = cleaningmsg.replace("dw+ ", "");
+	var cleaningmsg = cleaningmsg.replace("dw+", "");	
+var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,"");
+    	var playerobj = backupPlayerList.find(x => x.userid === data.userid);
 		if (playerobj.reputation<10) {
 		    sendNetworkMessage("sorry but you need at least 10rep to add values! 💡");
     }
