@@ -144,6 +144,24 @@ function chatmessagecallback(data){
     }
 
   }
+	
+else if (data.message == "oldd?" || data.message == "@oldd?") {
+        window.currenttime = Date.now();
+            if (currenttime - lastestmsgtime < milisecondsBeforeAskAgain) {            
+            setTimeout(WaitWorld , 1000);
+                return
+        }
+    
+var dailydb = getOldDailyDare();
+    if(dailydb){
+      sendNetworkMessage(dailydb.daretitle + " " + dailydb.coords + " 🦊");
+    }else{
+      sendNetworkMessage("No daily dare on record")
+    }
+
+            window.lastestmsgtime = Date.now();
+                }	
+	
   else if (data.message == "@dailydare" || data.message == "dd?" || data.message == "@dd?") {
     var dailydb = getDailyDare();
     if(dailydb){
@@ -369,6 +387,10 @@ function loginNoHash (email, pass, callback) {
 
 	req.open("GET", loginServer + "/login?email=" + encodeURIComponent(email) + "&pass=" + encodeURIComponent(pass));
 	req.send();
+}
+
+function getOldDailyDare(){
+  return dwdb.prepare("select * from dailydare WHERE dareid < (SELECT MAX(dareid) FROM dailydare) order by RANDOM() limit 1;").get()
 }
 
 startClient()
