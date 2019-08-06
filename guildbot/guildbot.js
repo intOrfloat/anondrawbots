@@ -146,6 +146,8 @@ guildsdb.prepare(`CREATE TABLE IF NOT EXISTS guilds
   guildname varchar(255) UNIQUE,
   leaderUserId integer,
   currentevent TEXT,
+  guildinfo TEXT,
+  eventCreatedTimestamp int,
   createdTimestamp int
 )`).run();
 guildsdb.prepare(`CREATE TABLE IF NOT EXISTS guildmembers
@@ -153,7 +155,8 @@ guildsdb.prepare(`CREATE TABLE IF NOT EXISTS guildmembers
   userid integer NOT NULL,
   currentguildid integer DEFAULT NULL,
   createdTimestamp int,
-  lastJumpedGuildsTimestamp int
+  lastJumpedGuildsTimestamp int,
+  lastViewedEventCreatedTimestamp int
 )`).run();
 
 guildsdb.prepare(`CREATE TABLE IF NOT EXISTS guildsettings
@@ -543,6 +546,56 @@ function copyPlayer(oldPlayerObj, newData){ // potentially old player obj
   }
 }
 
+function sendGuildEvent(userid){
+  if(userid == undefined ){
+    return;
+  }
+  var dataRow = getMyGuildStuff(userid)
+	if(dataRow == undefined){
+    console.log("dataRow == undefined")
+		return;
+	}
+  if(dataRow.currentevent == undefined){
+    console.log("dataRow.currentevent == undefined")
+    return;
+  }
+  if(dataRow.eventCreatedTimestamp == undefined){
+    console.log("Bug: expected eventCreatedTimestamp not null", dataRow)
+  }
+  if(dataRow.lastViewedEventCreatedTimestamp == dataRow.eventCreatedTimestamp){ //already viewed
+    console.log("user already viewed event", userid)
+    return;
+  }
+
+
+
+  var response = dataRow.guildname + " event: " + dataRow.currentevent
+  //sendNetworkMessage(response);
+  sendMessage(dataRow.userid, response, function(err, data){
+    //console.log("err",err, "data", dataRow)
+    if(err){
+      console.log(err)
+      if(failedSendMessage++ == 0)
+      loginNoHash(myemail, passwordHash, function(e){
+        failedSendMessage = 0;
+  			if(e){
+  				console.log(e);
+  				return
+  			}
+  		});
+    }
+    else {
+      console.log("successfully sent pm", dataRow.userid, response)
+      guildsdb.prepare("update guildmembers set lastViewedEventCreatedTimestamp = ? where userid = ?").run(dataRow.eventCreatedTimestamp, dataRow.userid);
+      //sendNetworkMessage("I sent you a pm with what you requested.")
+    }
+  });
+
+
+
+}
+
+var failedSendMessage = 0;
 var playerListDict = new Object();// key is stupid id
 var playerListLive = []
 
@@ -567,6 +620,10 @@ function playerlistcallback(data){
 		}
 		if(playerListDict[data[i].id]){ //created already
       copyPlayer(playerListDict[data[i].id], data[i])
+      if(data[i].userid !== undefined){
+        sendGuildEvent(data[i].userid)
+      }
+
 		}
 		else{ //create
 			console.log("create", data[i].name, data[i].id)
@@ -585,6 +642,7 @@ function playerlistcallback(data){
 
 				updatePlayerName(data[i].name, data[i].userid);
         attemptToSetStatsFromDb(data[i].id, data[i].userid);
+        sendGuildEvent(data[i].userid)
       }
 
     }
@@ -942,7 +1000,7 @@ function chatmessagecallback(data){
 
 	var myNameSentence = "Hello, I'm guildbot. I manage guilds and track activity! type gc? or ac? for more guilds and activity commands.";
 	var acOptions = "options: activeminutes|am, drawingstreak|ds, brushstats|bs, takebreak|tb, streakleaders|sl" //, idletime(not yet), averagecolor(not yet)"
-	var gcOptions = "options: join, leave, stats, leaderboard(lb), guildevent(ge), setguildevent, guildmembers";
+	var gcOptions = "options: join, leave, info, stats, leaderboard(lb), guildevent(ge), setguildevent, setguildinfo, guildmembers";
 
 	if(data.userid == myUserId || data.user == "SERVER") return;
 	if(data.message.trim() == "@guildbot" || data.message == myname || data.message == "@gb" )
@@ -965,7 +1023,7 @@ function chatmessagecallback(data){
       sendNetworkMessage("You are not logged in.")
 			return;
     }
-    var dataRow = getMyGuildInfo(data.userid)
+    var dataRow = getMyGuildStuff(data.userid)
 		if(dataRow == undefined){
 			sendNetworkMessage("You are not in any guild. Type gc? for commands.")
 			return;
@@ -1003,7 +1061,7 @@ function chatmessagecallback(data){
 			sendNetworkMessage("You are not logged in.")
 			return;
 		}
-		var dataRow = getMyGuildInfo(data.userid)
+		var dataRow = getMyGuildStuff(data.userid)
 		if(dataRow == undefined){
 			sendNetworkMessage("You are not in any guild. Type gc? for commands.")
 			return;
@@ -1019,7 +1077,7 @@ function chatmessagecallback(data){
 		}
 		sendNetworkMessage(dataRow.guildname + " event: " + dataRow.currentevent)
 	}
-	var guildname = data.message.replace("@guildbot","").replace("@gb", "").replace("join","").replace("stats","").trim()
+	var guildname = data.message.replace("@guildbot","").replace("@gb", "").replace("join","").replace("stats","").replace("info","").trim()
 	guildname = guildname.replace("[","").replace("]","").replace("<","").replace(">","");
 	console.log(data.user, data.message)
 
@@ -1044,22 +1102,60 @@ function chatmessagecallback(data){
 			else
 				sendNetworkMessage("Guild names need to be more than 0 characters.")
 		}
-		else if(data.message.includes("stats")) {
+		else if(data.message.includes("@gb info")) {
+
+			if(guildname.length == 0){
+				//get my guild's info
+				if(data.userid !== undefined){
+					var dataRow = getMyGuildStuff(data.userid)
+					console.log("info")
+					console.log(dataRow);
+					if(dataRow){
+            var guildinfo = dataRow.guildinfo;
+            if(guildinfo == undefined){
+              sendNetworkMessage("There is no guild info set yet! Check back soon! To set use @gb setguildinfo")
+  						return;
+  					}
+  					sendNetworkMessage(guildinfo);
+					}
+					else{
+						sendNetworkMessage("You are not in any guild. Type gc? for commands.")
+					}
+				}
+			}
+			else{
+				//get guild's info
+				getGuildFromName(guildname, function(err, guild){
+					if(err){
+						sendNetworkMessage(err)
+						return;
+					}
+					var guildinfo = guild.guildinfo;
+          if(guildinfo == undefined){
+            sendNetworkMessage("There is no guild info set yet! Check back soon! To set use @gb setguildinfo")
+						return;
+					}
+					sendNetworkMessage(guildinfo);
+				});
+
+			}
+		}
+    else if(data.message.includes("@gb stats")) {
 
 			if(guildname.length == 0){
 				//get my guild's stats
 				if(data.userid !== undefined){
-					var dataRow = getMyGuildInfo(data.userid)
+					var dataRow = getMyGuildStuff(data.userid)
 					console.log("stats")
 					console.log(dataRow);
 					if(dataRow){
-						getStatsForGuildDb(dataRow.guildid, function(totalActivityMinutes, totalMinutes, memberCount){
-							var leaderInfo = getPlayersStatsFromDb(dataRow.leaderUserId)
-							var membersText = " members";
-							if(memberCount <=1)
-								membersText = " member"
-							sendNetworkMessage(dataRow.guildname +" is led by " + leaderInfo.name + " with " + memberCount + membersText + ". Stats: Total active minutes:" + totalActivityMinutes + " Total Minutes Overall: " + totalMinutes);
-						});
+            getStatsForGuildDb(dataRow.guildid, function(totalActivityMinutes, totalMinutes, memberCount){
+            	var leaderInfo = getPlayersStatsFromDb(dataRow.leaderUserId)
+            	var membersText = " members";
+            	if(memberCount <=1)
+            		membersText = " member"
+            	sendNetworkMessage(dataRow.guildname +" is led by " + leaderInfo.name + " with " + memberCount + membersText + ". Stats: Total active minutes:" + totalActivityMinutes + " Total Minutes Overall: " + totalMinutes);
+            });
 					}
 					else{
 						sendNetworkMessage("You are not in any guild. Type gc? for commands.")
@@ -1069,9 +1165,7 @@ function chatmessagecallback(data){
 			}
 			else{
 				//get guild's stats
-
 				getGuildFromName(guildname, function(err, guild){
-
 					if(err){
 						sendNetworkMessage(err)
 						return;
@@ -1089,7 +1183,7 @@ function chatmessagecallback(data){
 
 			}
 		}
-		else if (data.message.includes("leave")) {
+		else if (data.message.includes("@gb leave")) {
 
 			if(data.userid !== undefined)
 			if(guildname.length > 0){
@@ -1105,7 +1199,7 @@ function chatmessagecallback(data){
 			}
 			else{
 				if(data.userid !== undefined){
-					result = getMyGuildInfo(data.userid)
+					result = getMyGuildStuff(data.userid)
 					var iExist = result.count != 0;
 					if (iExist && iExist.guildid > -1){
 
@@ -1117,7 +1211,7 @@ function chatmessagecallback(data){
 				//sendNetworkMessage("Please type out the full name of the guild you're leaving");
 			}
 		}
-		else if(data.message.includes("leaderboard") || data.message.includes("lb")) {
+		else if(data.message.includes("@gb leaderboard") || data.message.includes("@gb lb")) {
 			//guildsdb.prepare('attach "activity.db" as activity').run()
 			var topFourGuildStats = guildsdb.prepare(`
 				select guildname,
@@ -1141,13 +1235,38 @@ function chatmessagecallback(data){
 			}
 			sendNetworkMessage(response);
 		}
+    else if(data.message.indexOf("@gb setguildinfo") == 0){
+			guildInfo = data.message.replace("@gb setguildinfo", "").trim();
+			if(data.userid == undefined){
+				sendNetworkMessage("You are not logged in.")
+				return;
+			}
+			var dataRow = getMyGuildStuff(data.userid)
+			if(dataRow == undefined){
+				sendNetworkMessage("You are not in any guild. Type gc? for commands.")
+				return;
+			}
+
+			if(data.userid !== dataRow.leaderUserId){
+				var leaderInfo = getPlayersStatsFromDb(dataRow.leaderUserId)
+				sendNetworkMessage("You are not the leader of guild " + dataRow.guildname + ". " + leaderInfo.name + " is the guild leader.");
+				return;
+			}
+
+			if(guildInfo.length > 0 && guildInfo.length < 196){
+				setGuildInfo(dataRow.guildid, guildInfo);
+				sendNetworkMessage("Guild info set.")
+			}else{
+				sendNetworkMessage("Guild info must be between 0 and 196 characters");
+			}
+		}
 		else if(data.message.indexOf("@gb setguildevent") == 0){
 			guildEvent = data.message.replace("@gb setguildevent", "").trim();
 			if(data.userid == undefined){
 				sendNetworkMessage("You are not logged in.")
 				return;
 			}
-			var dataRow = getMyGuildInfo(data.userid)
+			var dataRow = getMyGuildStuff(data.userid)
 			if(dataRow == undefined){
 				sendNetworkMessage("You are not in any guild. Type gc? for commands.")
 				return;
@@ -1361,10 +1480,13 @@ function someoneLeftGuild(guildId, userid){
 }
 
 function setGuildEvent(guildid, guildevent){
-	guildsdb.prepare("update guilds set currentevent = ? where guildid = ?").run(guildevent, guildid);
+	guildsdb.prepare("update guilds set currentevent = ?, eventCreatedTimestamp = ? where guildid = ?").run(guildevent, Date.now(), guildid);
 }
-function getMyGuildInfo(userid){
-	var result = guildsdb.prepare("select userid, guildid, guildname, leaderUserId, currentevent from guildmembers join guilds on guildid = currentguildid where userid = ?").get(userid);
+function setGuildInfo(guildid, guildinfo){
+	guildsdb.prepare("update guilds set guildinfo = ? where guildid = ?").run(guildinfo, guildid);
+}
+function getMyGuildStuff(userid){
+	var result = guildsdb.prepare("select userid, guildid, guildname, guildinfo, leaderUserId, currentevent, eventCreatedTimestamp, lastViewedEventCreatedTimestamp from guildmembers join guilds on guildid = currentguildid where userid = ?").get(userid);
 
 	return result
 }

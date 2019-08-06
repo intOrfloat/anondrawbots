@@ -21,7 +21,7 @@ var lastestmsgtime =  Date.now();
 var blacklist = [];
 var playerListLive = []
 var daily = undefined
-var whitelist = "18145,10890,15197,2659"; //exclusive for dd
+var whitelist = "18145,10890,15197,2659,30698"; //exclusive for dd
 var ddline = "";
 
 
@@ -249,8 +249,8 @@ function chatmessagecallback(data){
     var cleaningmsg = cleaningmsg.replace("@xxxdw+", "");
     var cleaningmsg = cleaningmsg.replace("xxx+ ", "");
     var cleaningmsg = cleaningmsg.replace("xxx+", "");
-	var cleaningmsg = cleaningmsg.replace("dw+ ", "");
-	var cleaningmsg = cleaningmsg.replace("dw+", "");	
+	  var cleaningmsg = cleaningmsg.replace("dw+ ", "");
+    var cleaningmsg = cleaningmsg.replace("dw+", "");
     var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,""); //remove 'the' 'a' and 'an' from the start to avoid duplicates
     var playerobj = backupPlayerList.find(x => x.userid === data.userid);
 		if (playerobj.reputation<10) {
@@ -266,7 +266,7 @@ function chatmessagecallback(data){
     if(type == 'nsfw')
       message += getTotalNSFWSubmissionsCount() + " xxx ideas. Thanks! 🔞"
     else
-      message += getTotalNSFWSubmissionsCount() +" ideas. Thanks!"
+      message += getTotalSFWSubmissionsCount() +" ideas. Thanks!"
     sendNetworkMessage(message);
   }
 }
