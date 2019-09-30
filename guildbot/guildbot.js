@@ -940,7 +940,7 @@ function chatmessagecallback(data){
 	}
 
 	var myNameSentence = "Hello, I'm guildbot. I manage guilds and track activity! type gc? or ac? for more guilds and activity commands.";
-	var acOptions = "options: activeminutes|am, drawingstreak|ds, brushstats|bs, takebreak|tb, streakleaders|sl" //, idletime(not yet), averagecolor(not yet)"
+	var acOptions = "options: activeminutes|am, drawingstreak|ds, brushstats|bs, takebreak|tb, streakleaders|sl, activehours|ah" //, idletime(not yet), averagecolor(not yet)"
 	var gcOptions = "options: join, leave, stats, leaderboard(lb), guildevent(ge), setguildevent, guildmembers";
 
 	if(data.userid == myUserId || data.user == "SERVER") return;
@@ -1172,7 +1172,14 @@ function chatmessagecallback(data){
 				giveUserActivity(data.id, rowsFromDatabase)
 
 			}
-		}
+		} else if (data.message.includes("activehours") || data.message.includes("ah")) {
+            if(data.userid !== undefined){
+                var rowsFromDatabase = getPlayersStatsFromDb(data.userid);
+                console.log(rowsFromDatabase);
+                giveUserActivityHours(data.id, rowsFromDatabase);
+
+            }
+        }
     else if (data.message.includes("streakleaders") || data.message.includes("sl")){
       var topStreaks = guildsdb.prepare(`select name, activityMinutes, highestPercentAchievement from players
       where highestPercentAchievement > 0
@@ -1293,6 +1300,24 @@ function giveUserActivity(playerid, rowsFromDatabase){
 
 function HelloWorld(){
 	sendNetworkMessage("Hello, im @activitybot. type '@activitybot' to see options for viewing your drawing activity!")
+}
+
+function giveUserActivityHours(playerid, rowsFromDatabase){
+    var sentence = ""
+    if(playerid !== undefined && playerListDict[playerid] !== undefined){
+        var minutes_total= playerListDict[playerid].activityMinutes + rowsFromDatabase? rowsFromDatabase.activityMinutes : 0;
+        var summary_hours= Math.floor(minutes_total/60.0);
+        var summary_minutes= minutes_total%60;
+
+        sentence += "<All Time Activity: "+ summary_hours + "h " + summary_minutes + "m>";
+        //sentence += "/" + playerListDict[playerid].totalMinutes;
+
+        sendNetworkMessage(sentence);
+    }
+    else{
+        sendNetworkMessage("I have no record of you")
+        console.log("I have no record of you", playerid, playerListDict, playersThatLeftInLast10Minutes)
+    }
 }
 
 function sendNetworkMessage(message){
