@@ -80,6 +80,8 @@ http.createServer(function (req, res) {
   if(parsedUrl.pathname == "/updateMinutes"){
     if(queryData.minutes && queryData.id){
       playerListDict[queryData.id]["activityMinutesEarnedPerHour"] = queryData.minutes;
+      if(queryData.streak)
+        playerListDict[queryData.id]["percentMultiplier"] = queryData.streak
       res.write(JSON.stringify(playerListDict[queryData.id]));
   		res.end();
   		return;
@@ -822,6 +824,7 @@ function updatePlayerTime(id){
     	var diff = now - playerListDict[id]["lastDrawn"];
       if(diff > (fifteenMinutesInMilliseconds * 4)){
         playerListDict[id]["percentMultiplier"] = 0;
+        playerListDict[id]["highestPercentAchievement"] = 0;
       }
     }
 		//console.log("updateplayertime",playerListDict[id].name)
@@ -958,13 +961,21 @@ function getSum(total, num) {
   return Number(total) + Number(num);
 }
 
+function zeroAPlayer(id){
+  playerListDict[id]["activityMinutesEarnedPerHour"] = "0".repeat(60);
+  playerListDict[id]["highestPercentAchievement"] = 0;
+  playerListDict[id]["percentMultiplier"] = 0;
+}
+
 function getPercentStreakLastHour(id){
 	if(playerListDict[id]["activityMinutesEarnedPerHour"] == undefined){
 		console.log("getPercentStreakLastHour activityMinutesEarnedPerHour undefined", playerListDict[id]);
-		playerListDict[data[i].id]["activityMinutesEarnedPerHour"] = "0".repeat(60)
+    zeroAPlayer(id)
 	}
 	var lastHourMinEarned = playerListDict[id]["activityMinutesEarnedPerHour"].split('').reduce(getSum);
 	var percentlasthour = Math.ceil((lastHourMinEarned/60)*100);
+  if(percentlasthour >= 90)
+    percentlasthour = 100
 	//console.log(playerListDict[id], "percent last hour", percentlasthour + "%")
 	return percentlasthour
 }
