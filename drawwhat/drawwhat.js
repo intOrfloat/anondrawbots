@@ -21,7 +21,7 @@ var lastestmsgtime =  Date.now();
 var blacklist = [];
 var playerListLive = []
 var daily = undefined
-var whitelist = "18145,10890,15197,2659"; //exclusive for dd
+var whitelist = "18145,10890,15197,2659,30698,30079"; //exclusive for dd
 var ddline = "";
 
 
@@ -122,7 +122,7 @@ function chatmessagecallback(data){
   else if (data.message == "contest?"){
     var contestdb = getContest()
     if(contestdb){
-      sendNetworkMessage(contestdb.contesttitle + " " + contestdb.coords + " ??");
+      sendNetworkMessage(contestdb.contesttitle + " " + contestdb.coords + " 🦊");
     }else{
       sendNetworkMessage("No Contest on record")
     }
@@ -139,7 +139,7 @@ function chatmessagecallback(data){
       var title = cleaningmsg.replace(/\+\+(.*)$/, "");
       var coords = cleaningmsg.replace(/^(.*)\+\+/, "");
       addContest(data.userid, title, coords)
-      sendNetworkMessage( title + " " + coords + " ??");
+      sendNetworkMessage( title + " " + coords + " 🦊");
 
     }
 
@@ -147,7 +147,7 @@ function chatmessagecallback(data){
   else if (data.message == "@dailydare" || data.message == "dd?" || data.message == "@dd?") {
     var dailydb = getDailyDare();
     if(dailydb){
-      sendNetworkMessage(dailydb.daretitle + " " + dailydb.coords + " ??");
+      sendNetworkMessage(dailydb.daretitle + " " + dailydb.coords + " 🦊");
     }else{
       sendNetworkMessage("No daily dare on record")
     }
@@ -172,8 +172,8 @@ function chatmessagecallback(data){
       var coords = cleaningmsg.replace(/^(.*)\+\+/, "");
       daily = {title:title, coords:coords};
       addDailyDare(data.userid, title, coords)
-      sendNetworkMessage( title + " " + coords + " ??");
-      ddline = title + " " + coords + " ??";
+      sendNetworkMessage( title + " " + coords + " 🦊");
+      ddline = title + " " + coords + " 🦊";
 
     }
   }
@@ -183,14 +183,14 @@ function chatmessagecallback(data){
       }
       if(data.userid === undefined){
         var currenttime = Date.now();
-        sendNetworkMessage("sorry but you need do be logged in order to use the bot! ??");
+        sendNetworkMessage("sorry but you need do be logged in order to use the bot! 💡");
         return;
       }
       var type = 'sfw';
       if(data.message.includes('xxx')) type = 'nsfw';
 
       var randomdb = getRandomSubmission(type);
-      var randomElement = randomdb.submissiontext + (type == 'nsfw' ? " ??" : "");
+      var randomElement = randomdb.submissiontext + (type == 'nsfw' ? " 🔞" : "");
       if (randomElement.length > 255 - data.user.length - 3) {
         sendNetworkMessage(randomElement);
       } else {
@@ -204,7 +204,7 @@ function chatmessagecallback(data){
     }
     if(data.userid === undefined){
       var currenttime = Date.now();
-      sendNetworkMessage("sorry but you need do be logged in order to use the bot! ??");
+      sendNetworkMessage("sorry but you need do be logged in order to use the bot! 💡");
       return;
     }
     var type = 'sfw';
@@ -216,7 +216,7 @@ function chatmessagecallback(data){
       return;
     }
     removeLatestSubmission(data.userid, type);
-    sendNetworkMessage("@" + data.user + ": "+ (type == 'nsfw'?"??":"") +" Your lastest entry "+(latestentry ==undefined ? "" : "("+latestentry+")")+" is removed");
+    sendNetworkMessage("@" + data.user + ": "+ (type == 'nsfw'?"🔞":"") +" Your lastest entry "+(latestentry ==undefined ? "" : "("+latestentry+")")+" is removed");
   }
   else if (data.message == "@xxxdw+" || data.message == "@xxx+" || data.message == "xxx+" || data.message == "@drawwhat+" || data.message == "@dw+" || data.message == "dw+") {
     if(blacklist.includes(data.userid)) {
@@ -224,17 +224,17 @@ function chatmessagecallback(data){
     }
     if(data.userid === undefined){
       var currenttime = Date.now();
-      sendNetworkMessage("sorry but you need do be logged in order to use the bot! ??");
+      sendNetworkMessage("sorry but you need do be logged in order to use the bot! 💡");
       return;
     }
     var type = 'sfw';
     if(data.message.includes('xxx')) type = 'nsfw';
 
     if(type == 'sfw'){
-      sendNetworkMessage("@" + data.user + ": ?�� The proper way to add ideas is dw+ your suggestion");
+      sendNetworkMessage("@" + data.user + ": 💡 The proper way to add ideas is dw+ your suggestion");
     }
     else {
-      sendNetworkMessage("Send xxx? to retrieve random NSFW ideas for drawing. To input NSFW ideas instead, send xxx+ your idea (troll = blacklist). ??");
+      sendNetworkMessage("Send xxx? to retrieve random NSFW ideas for drawing. To input NSFW ideas instead, send xxx+ your idea (troll = blacklist). 🔞");
     }
   }
 	else if ( ( /@xxxdw\+|@xxx\+|xxx\+/.test(data.message) || /@drawwhat\+|@dw\+|dw\+/.test(data.message) ) && data.user != myname && data.user != "SERVER") {
@@ -249,10 +249,12 @@ function chatmessagecallback(data){
     var cleaningmsg = cleaningmsg.replace("@xxxdw+", "");
     var cleaningmsg = cleaningmsg.replace("xxx+ ", "");
     var cleaningmsg = cleaningmsg.replace("xxx+", "");
-    var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,"");
+	  var cleaningmsg = cleaningmsg.replace("dw+ ", "");
+    var cleaningmsg = cleaningmsg.replace("dw+", "");
+    var cleaningmsg = cleaningmsg.replace(/(?:^(the|a|an) +)/i,""); //remove 'the' 'a' and 'an' from the start to avoid duplicates
     var playerobj = backupPlayerList.find(x => x.userid === data.userid);
 		if (playerobj.reputation<10) {
-		    sendNetworkMessage("sorry but you need at least 10rep to add values! ??");
+		    sendNetworkMessage("sorry but you need at least 10rep to add values! 💡");
     }
     var type = 'sfw';
     if(data.message.includes('xxx')) type = 'nsfw';
@@ -262,9 +264,9 @@ function chatmessagecallback(data){
     submitSubmition(data.userid, type, cleaningmsg, data.user)
     var message = "@" + data.user + ": User entry #" + getSubmissionCount(data.userid, type) + " added to ";
     if(type == 'nsfw')
-      message += getTotalNSFWSubmissionsCount() + " xxx ideas. Thanks! ??"
+      message += getTotalNSFWSubmissionsCount() + " xxx ideas. Thanks! 🔞"
     else
-      message += getTotalNSFWSubmissionsCount() +" ideas. Thanks!"
+      message += getTotalSFWSubmissionsCount() +" ideas. Thanks!"
     sendNetworkMessage(message);
   }
 }
