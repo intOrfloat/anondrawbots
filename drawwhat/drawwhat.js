@@ -21,7 +21,7 @@ var lastestmsgtime =  Date.now();
 var blacklist = [];
 var playerListLive = []
 var daily = undefined
-var whitelist = "18145,10890,15197,2659,30698"; //exclusive for dd
+var whitelist = "18145,10890,15197,2659,30698,30079"; //exclusive for dd
 var ddline = "";
 
 
