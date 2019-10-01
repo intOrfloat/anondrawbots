@@ -1438,7 +1438,7 @@ function HelloWorld(){
 function giveUserActivityHours(playerid, rowsFromDatabase){
     var sentence = ""
     if(playerid !== undefined && playerListDict[playerid] !== undefined){
-        var minutes_total= playerListDict[playerid].activityMinutes + rowsFromDatabase? rowsFromDatabase.activityMinutes : 0;
+        var minutes_total= playerListDict[playerid].activityMinutes + (rowsFromDatabase? rowsFromDatabase.activityMinutes : 0);
         var summary_hours= Math.floor(minutes_total/60.0);
         var summary_minutes= minutes_total%60;
 
